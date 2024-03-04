@@ -1,0 +1,1 @@
+﻿Extense is a nuget package with helpful extensions to be used on any .NET projects.
