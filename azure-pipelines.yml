@@ -1,0 +1,39 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+name: 'Extense.Package'
+
+variables:
+  major: '1'
+  minor: '4'
+  revision: $[counter(variables['minor'], 1)] # This will get reset every time minor gets bumped.
+  nugetVersion: '$(major).$(minor).$(revision)'
+
+trigger:
+- main
+
+pool:
+  vmImage: windows-latest
+
+steps:
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    arguments: '--configuration Release'
+    projects: |
+      **/Extense/Extense.csproj
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'pack'
+    packagesToPack: '**/Extense/Extense.csproj'
+    configuration: 'Release'
+    versionEnvVar: 'nugetVersion'
+    versioningScheme: 'byEnvVar'
+- task: NuGetCommand@2
+  inputs:
+    command: 'push'
+    packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
+    nuGetFeedType: 'external'
+    publishFeedCredentials: 'rollbard nuget'
